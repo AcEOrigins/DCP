@@ -131,11 +131,19 @@ if ($method === 'POST' && isset($segments[1]) && $segments[1] === 'customer' && 
     $passwordHash = hashPassword($password);
     $cookieConsentValue = in_array($cookieConsent, ['accepted', 'declined']) ? $cookieConsent : 'pending';
     
-    $stmt = $db->prepare("
-        INSERT INTO users (email, password_hash, name, phone, role, cookie_consent)
-        VALUES (?, ?, ?, ?, 'customer', ?)
-    ");
-    $stmt->execute([$email, $passwordHash, $name, $phone, $cookieConsentValue]);
+    try {
+        $stmt = $db->prepare("
+            INSERT INTO users (email, password_hash, name, phone, role, cookie_consent)
+            VALUES (?, ?, ?, ?, 'customer', ?)
+        ");
+        $stmt->execute([$email, $passwordHash, $name, $phone, $cookieConsentValue]);
+    } catch (PDOException $e) {
+        if (DEBUG_MODE) {
+            sendError('Database error: ' . $e->getMessage(), 500);
+        } else {
+            sendError('Failed to create account', 500);
+        }
+    }
     
     $userId = $db->lastInsertId();
     $token = generateToken($userId);
@@ -184,11 +192,19 @@ if ($method === 'POST' && isset($segments[1]) && $segments[1] === 'manager' && i
     
     $passwordHash = hashPassword($password);
     
-    $stmt = $db->prepare("
-        INSERT INTO users (email, password_hash, name, phone, role)
-        VALUES (?, ?, ?, ?, 'manager')
-    ");
-    $stmt->execute([$email, $passwordHash, $name, $phone]);
+    try {
+        $stmt = $db->prepare("
+            INSERT INTO users (email, password_hash, name, phone, role)
+            VALUES (?, ?, ?, ?, 'manager')
+        ");
+        $stmt->execute([$email, $passwordHash, $name, $phone]);
+    } catch (PDOException $e) {
+        if (DEBUG_MODE) {
+            sendError('Database error: ' . $e->getMessage(), 500);
+        } else {
+            sendError('Failed to create account', 500);
+        }
+    }
     
     $userId = $db->lastInsertId();
     $token = generateToken($userId);

@@ -36,9 +36,8 @@
  */
 
 // API Configuration
-// For development: use 'http://localhost:3000/api'
-// For production: use 'https://api.declutterpros.com/api'
-const API_BASE_URL = 'http://localhost:3000/api'; // Change this to your API URL
+// Automatically detects the current origin and uses /api endpoint
+const API_BASE_URL = (window.location.origin + '/api'); // Uses current domain + /api
 
 // Token Management
 function getAuthToken() {

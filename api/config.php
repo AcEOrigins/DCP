@@ -7,9 +7,9 @@
 
 // Database Configuration
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'declutterpros');
-define('DB_USER', 'your_database_user');
-define('DB_PASS', 'your_database_password');
+define('DB_NAME', 'u775021278_declutterpros'); // Update this with your actual database name
+define('DB_USER', 'devAdminDCP'); // UPDATE THIS with your actual database username
+define('DB_PASS', '>q}Q>']6LNp~g+7'); // UPDATE THIS with your actual database password
 define('DB_CHARSET', 'utf8mb4');
 
 // JWT Secret Key (generate a secure random string)
