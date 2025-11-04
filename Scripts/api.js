@@ -142,6 +142,14 @@ const AuthAPI = {
         });
     },
 
+    // Manager Registration
+    async registerManager(managerData) {
+        return apiRequest('/auth/manager/register', {
+            method: 'POST',
+            body: JSON.stringify(managerData),
+        });
+    },
+
     // Verify Token
     async verifyToken() {
         return apiRequest('/auth/verify');
@@ -335,6 +343,20 @@ const CookieConsentAPI = {
 const ManagementAPI = {
     async getAllEmployees() {
         return apiRequest('/employees');
+    },
+
+    async createEmployee(employeeData) {
+        return apiRequest('/employees', {
+            method: 'POST',
+            body: JSON.stringify(employeeData),
+        });
+    },
+
+    async updateUserRole(userId, role) {
+        return apiRequest(`/employees/${userId}/role`, {
+            method: 'PUT',
+            body: JSON.stringify({ role }),
+        });
     },
 
     async getAnalytics() {

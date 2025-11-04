@@ -334,7 +334,7 @@ function initializeAuth() {
     // Login
     loginForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('loginEmail').value;
+        const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
         const submitBtn = loginForm.querySelector('button[type="submit"]');
         
@@ -343,54 +343,52 @@ function initializeAuth() {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Logging in...';
 
-        // MOCK LOGIN - No API calls, works offline
         try {
-            // Determine role based on email
-            let role = 'customer';
-            if (email.includes('employee') || email.includes('emp')) {
-                role = 'employee';
-            } else if (email.includes('manager') || email.includes('mgr') || email.includes('admin')) {
-                role = 'manager';
+            let result;
+            
+            // Determine which login endpoint to use based on email pattern
+            // Try manager first, then employee, then customer
+            if (email.includes('manager') || email.includes('mgr') || email.includes('admin')) {
+                result = await AuthAPI.loginManager(email, password);
+            } else if (email.includes('employee') || email.includes('emp')) {
+                result = await AuthAPI.loginEmployee(email, password);
+            } else {
+                result = await AuthAPI.loginCustomer(email, password);
             }
             
-            // Create mock user
-            const mockUser = {
-                id: Date.now(),
-                email: email,
-                name: email.split('@')[0].replace(/[._]/g, ' '),
-                role: role,
-                phone: '555-1234',
-                companyName: role === 'customer' ? null : 'Declutter Pros'
-            };
-            
-            // Set mock token and user
-            setAuthToken('mock_token_' + Date.now());
-            currentUser = mockUser;
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            
-            // Clear any pending quote request
-            sessionStorage.removeItem('pendingQuoteRequest');
-            
-            // Close modal
-            hideLoginModal();
-            
-            // Check cookie consent after login
-            checkCookieConsentOnLogin();
-            
-            // Update navigation
-            updateNavForUser();
-            
-            // Redirect to portal after successful login
-            const currentPath = window.location.pathname || window.location.href;
-            const currentPage = currentPath.split('/').pop().split('?')[0];
-            if (currentPage === 'index.html') {
-                window.location.href = 'portal.html';
+            if (result.success && result.user) {
+                // Set token and user
+                setAuthToken(result.token);
+                currentUser = result.user;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                // Clear any pending quote request
+                sessionStorage.removeItem('pendingQuoteRequest');
+                
+                // Close modal
+                hideLoginModal();
+                
+                // Check cookie consent after login
+                checkCookieConsentOnLogin();
+                
+                // Update navigation
+                updateNavForUser();
+                
+                // Redirect to portal after successful login
+                const currentPath = window.location.pathname || window.location.href;
+                const currentPage = currentPath.split('/').pop().split('?')[0];
+                if (currentPage === 'index.html') {
+                    window.location.href = 'portal.html';
+                } else {
+                    location.reload();
+                }
             } else {
-                location.reload();
+                throw new Error('Login failed');
             }
         } catch (error) {
             console.error('Login error:', error);
-            alert('Login processed successfully!');
+            const errorMessage = error.message || 'Invalid email or password. Please try again.';
+            alert(errorMessage);
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
         }
@@ -399,9 +397,9 @@ function initializeAuth() {
     // Register
     registerForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('regEmail').value;
+        const email = document.getElementById('regEmail').value.trim();
         const password = document.getElementById('regPassword').value;
-        const phone = document.getElementById('regPhone').value;
+        const phone = document.getElementById('regPhone').value.trim();
         const submitBtn = registerForm.querySelector('button[type="submit"]');
         
         // Disable button during request
@@ -409,62 +407,65 @@ function initializeAuth() {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Registering...';
 
-        // MOCK REGISTRATION - No API calls, works offline
         try {
-            // Create mock user
-            const mockUser = {
-                id: Date.now(),
+            // Extract name from email if not provided
+            const name = email.split('@')[0].replace(/[._]/g, ' ');
+            const cookieConsent = localStorage.getItem('cookieConsent') || 'pending';
+            
+            // Call the API to register
+            const result = await AuthAPI.registerCustomer({
                 email: email,
-                name: email.split('@')[0].replace(/[._]/g, ' '),
-                role: 'customer',
+                password: password,
+                name: name,
                 phone: phone,
-                companyName: null
-            };
+                cookieConsent: cookieConsent
+            });
             
-            // Set mock token and user
-            setAuthToken('mock_token_' + Date.now());
-            currentUser = mockUser;
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            
-            // Check if there's a pending quote request
-            const pendingQuoteRequest = sessionStorage.getItem('pendingQuoteRequest');
-            if (pendingQuoteRequest) {
-                try {
-                    const quoteData = JSON.parse(pendingQuoteRequest);
-                    quoteData.customerId = currentUser.id;
-                    // Mock quote creation - just log it
-                    console.log('Mock quote created:', quoteData);
-                    sessionStorage.removeItem('pendingQuoteRequest');
-                    alert('Account created successfully! Your quote request has been submitted. We will contact you soon.');
-                } catch (quoteError) {
-                    console.error('Failed to process pending quote:', quoteError);
+            if (result.success && result.user) {
+                // Set token and user
+                setAuthToken(result.token);
+                currentUser = result.user;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                // Check if there's a pending quote request
+                const pendingQuoteRequest = sessionStorage.getItem('pendingQuoteRequest');
+                if (pendingQuoteRequest) {
+                    try {
+                        const quoteData = JSON.parse(pendingQuoteRequest);
+                        quoteData.customerId = currentUser.id;
+                        // Create the quote via API
+                        await QuotesAPI.create(quoteData);
+                        sessionStorage.removeItem('pendingQuoteRequest');
+                        alert('Account created successfully! Your quote request has been submitted. We will contact you soon.');
+                    } catch (quoteError) {
+                        console.error('Failed to process pending quote:', quoteError);
+                        alert('Account created successfully! You can submit a quote request from the portal.');
+                    }
+                } else {
                     alert('Account created successfully!');
                 }
+                
+                // Close modal
+                hideLoginModal();
+                
+                // Update navigation
+                updateNavForUser();
+                
+                // Redirect to portal after successful registration
+                const currentPath = window.location.pathname || window.location.href;
+                const currentPage = currentPath.split('/').pop().split('?')[0];
+                if (currentPage === 'index.html') {
+                    window.location.href = 'portal.html';
+                } else {
+                    location.reload();
+                }
             } else {
-                alert('Account created successfully!');
-            }
-            
-            // Close modal
-            hideLoginModal();
-            
-            // Check if there's a pending cookie consent from before registration
-            const pendingConsent = localStorage.getItem('cookieConsent');
-            if (pendingConsent) {
-                // Save to new account
-                await saveCookieConsent(pendingConsent);
-            }
-            
-            // Redirect to portal after successful registration
-            const currentPath = window.location.pathname || window.location.href;
-            const currentPage = currentPath.split('/').pop().split('?')[0];
-            if (currentPage === 'index.html') {
-                window.location.href = 'portal.html';
-            } else {
-                location.reload();
+                throw new Error('Registration failed');
             }
         } catch (error) {
             console.error('Registration error:', error);
-            alert('Registration processed successfully!');
+            const errorMessage = error.message || 'Failed to create account. Please check your information and try again.';
+            alert(errorMessage);
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
         }
@@ -1159,7 +1160,94 @@ function loadEmployeesContent() {
                 </div>
             </div>
         </div>
+        
+        <!-- Add Employee Modal -->
+        <div id="addEmployeeModal" class="modal hidden">
+            <div class="modal-overlay" id="employeeModalOverlay"></div>
+            <div class="modal-content">
+                <button class="modal-close" id="employeeModalClose">&times;</button>
+                <div class="login-card">
+                    <div class="login-header">
+                        <h2>Add New Employee</h2>
+                        <p>Enter employee information below</p>
+                    </div>
+                    <form id="addEmployeeForm" class="auth-form">
+                        <div class="form-group">
+                            <label for="employeeName">Full Name *</label>
+                            <input type="text" id="employeeName" name="employeeName" placeholder="Enter full name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="employeeEmail">Email Address *</label>
+                            <input type="email" id="employeeEmail" name="employeeEmail" placeholder="Enter email address" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="employeePhone">Phone Number</label>
+                            <input type="tel" id="employeePhone" name="employeePhone" placeholder="Enter phone number">
+                        </div>
+                        <div class="form-group">
+                            <label for="employeePassword">Password *</label>
+                            <input type="password" id="employeePassword" name="employeePassword" placeholder="Create a password (min 6 characters)" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">Create Employee</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     `;
+    
+    // Setup modal handlers
+    const addEmployeeBtn = document.getElementById('addEmployeeBtn');
+    const addEmployeeModal = document.getElementById('addEmployeeModal');
+    const employeeModalClose = document.getElementById('employeeModalClose');
+    const employeeModalOverlay = document.getElementById('employeeModalOverlay');
+    const addEmployeeForm = document.getElementById('addEmployeeForm');
+    
+    addEmployeeBtn?.addEventListener('click', () => {
+        if (addEmployeeModal) addEmployeeModal.classList.remove('hidden');
+    });
+    
+    employeeModalClose?.addEventListener('click', () => {
+        if (addEmployeeModal) addEmployeeModal.classList.add('hidden');
+        if (addEmployeeForm) addEmployeeForm.reset();
+    });
+    
+    employeeModalOverlay?.addEventListener('click', () => {
+        if (addEmployeeModal) addEmployeeModal.classList.add('hidden');
+        if (addEmployeeForm) addEmployeeForm.reset();
+    });
+    
+    // Handle form submission
+    addEmployeeForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = addEmployeeForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        
+        const employeeData = {
+            name: document.getElementById('employeeName').value.trim(),
+            email: document.getElementById('employeeEmail').value.trim(),
+            phone: document.getElementById('employeePhone').value.trim() || null,
+            password: document.getElementById('employeePassword').value
+        };
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creating...';
+        
+        try {
+            const result = await ManagementAPI.createEmployee(employeeData);
+            if (result.data) {
+                alert('Employee created successfully!');
+                addEmployeeModal.classList.add('hidden');
+                addEmployeeForm.reset();
+                loadEmployeesData();
+            }
+        } catch (error) {
+            console.error('Error creating employee:', error);
+            alert(error.message || 'Failed to create employee. Please try again.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    });
     
     loadEmployeesData();
 }
@@ -1211,10 +1299,46 @@ function loadAnalyticsData() {
     }
 }
 
-function loadEmployeesData() {
+async function loadEmployeesData() {
     const employeesList = document.getElementById('employeesList');
-    if (employeesList) {
-        employeesList.innerHTML = '<p class="empty-state">No employees found.</p>';
+    if (!employeesList) return;
+    
+    try {
+        const result = await ManagementAPI.getAllEmployees();
+        const employees = result.data || [];
+        
+        if (employees.length === 0) {
+            employeesList.innerHTML = '<p class="empty-state">No employees found. Click "Add Employee" to create your first employee.</p>';
+            return;
+        }
+        
+        employeesList.innerHTML = `
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${employees.map(emp => `
+                            <tr>
+                                <td>${emp.name || 'N/A'}</td>
+                                <td>${emp.email || 'N/A'}</td>
+                                <td>${emp.phone || 'N/A'}</td>
+                                <td>${emp.created_at ? new Date(emp.created_at).toLocaleDateString() : 'N/A'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error loading employees:', error);
+        employeesList.innerHTML = '<p class="empty-state error">Failed to load employees. Please try again later.</p>';
     }
 }
 

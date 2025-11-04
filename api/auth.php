@@ -153,6 +153,59 @@ if ($method === 'POST' && isset($segments[1]) && $segments[1] === 'customer' && 
     ], 201);
 }
 
+// Manager Registration: POST /auth/manager/register
+if ($method === 'POST' && isset($segments[1]) && $segments[1] === 'manager' && isset($segments[2]) && $segments[2] === 'register') {
+    $data = getJsonInput();
+    $email = $data['email'] ?? '';
+    $password = $data['password'] ?? '';
+    $name = $data['name'] ?? '';
+    $phone = $data['phone'] ?? '';
+    
+    if (empty($email) || empty($password) || empty($name)) {
+        sendError('Email, password, and name are required', 400);
+    }
+    
+    // Check if email already exists
+    $stmt = $db->prepare("SELECT id FROM users WHERE email = ?");
+    $stmt->execute([$email]);
+    if ($stmt->fetch()) {
+        sendError('Email already registered', 409);
+    }
+    
+    // Validate email format
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        sendError('Invalid email format', 400);
+    }
+    
+    // Validate password strength
+    if (strlen($password) < 6) {
+        sendError('Password must be at least 6 characters', 400);
+    }
+    
+    $passwordHash = hashPassword($password);
+    
+    $stmt = $db->prepare("
+        INSERT INTO users (email, password_hash, name, phone, role)
+        VALUES (?, ?, ?, ?, 'manager')
+    ");
+    $stmt->execute([$email, $passwordHash, $name, $phone]);
+    
+    $userId = $db->lastInsertId();
+    $token = generateToken($userId);
+    
+    // Get created user
+    $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
+    $stmt->execute([$userId]);
+    $user = $stmt->fetch();
+    unset($user['password_hash']);
+    
+    sendResponse([
+        'success' => true,
+        'token' => $token,
+        'user' => $user
+    ], 201);
+}
+
 // Verify Token: GET /auth/verify
 if ($method === 'GET' && isset($segments[1]) && $segments[1] === 'verify') {
     $user = verifyToken();
