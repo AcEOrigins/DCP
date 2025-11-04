@@ -91,18 +91,20 @@ async function apiRequest(endpoint, options = {}) {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || `API Error: ${response.statusText}`);
+            // Check for error message in different formats
+            const errorMessage = data.error || data.message || `API Error: ${response.statusText}`;
+            const error = new Error(errorMessage);
+            error.status = response.status;
+            error.data = data;
+            throw error;
         }
 
         return data;
     } catch (error) {
         console.error('API Request Error:', error);
-        // Don't show network errors to users if API server isn't running
-        if (error.message.includes('fetch') || error.message.includes('NetworkError')) {
-            console.warn('API server may not be running. Please start your backend server.');
-            // Return empty data structure instead of throwing
-            return { data: [], message: 'API server unavailable' };
-        }
+        console.error('Request URL:', url);
+        console.error('Request Config:', config);
+        // Re-throw the error so the calling code can handle it
         throw error;
     }
 }

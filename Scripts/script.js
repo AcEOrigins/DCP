@@ -412,6 +412,8 @@ function initializeAuth() {
             const name = email.split('@')[0].replace(/[._]/g, ' ');
             const cookieConsent = localStorage.getItem('cookieConsent') || 'pending';
             
+            console.log('Registering user:', { email, name, phone });
+            
             // Call the API to register
             const result = await AuthAPI.registerCustomer({
                 email: email,
@@ -420,6 +422,8 @@ function initializeAuth() {
                 phone: phone,
                 cookieConsent: cookieConsent
             });
+            
+            console.log('Registration result:', result);
             
             if (result.success && result.user) {
                 // Set token and user
@@ -464,7 +468,24 @@ function initializeAuth() {
             }
         } catch (error) {
             console.error('Registration error:', error);
-            const errorMessage = error.message || 'Failed to create account. Please check your information and try again.';
+            console.error('Error details:', {
+                message: error.message,
+                status: error.status,
+                data: error.data
+            });
+            
+            // Show user-friendly error message
+            let errorMessage = 'Failed to create account. ';
+            if (error.message) {
+                errorMessage += error.message;
+            } else if (error.status === 409) {
+                errorMessage += 'This email is already registered. Please login instead.';
+            } else if (error.status === 400) {
+                errorMessage += 'Please check that all required fields are filled correctly.';
+            } else {
+                errorMessage += 'Please try again or check your internet connection.';
+            }
+            
             alert(errorMessage);
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;

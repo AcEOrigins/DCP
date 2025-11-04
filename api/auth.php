@@ -137,6 +137,31 @@ if ($method === 'POST' && isset($segments[1]) && $segments[1] === 'customer' && 
             VALUES (?, ?, ?, ?, 'customer', ?)
         ");
         $stmt->execute([$email, $passwordHash, $name, $phone, $cookieConsentValue]);
+        
+        $userId = $db->lastInsertId();
+        
+        if (!$userId || $userId == 0) {
+            sendError('Failed to create user account. Please try again.', 500);
+        }
+        
+        $token = generateToken($userId);
+        
+        // Get created user
+        $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+        
+        if (!$user) {
+            sendError('Account created but could not retrieve user data', 500);
+        }
+        
+        unset($user['password_hash']);
+        
+        sendResponse([
+            'success' => true,
+            'token' => $token,
+            'user' => $user
+        ], 201);
     } catch (PDOException $e) {
         if (DEBUG_MODE) {
             sendError('Database error: ' . $e->getMessage(), 500);
@@ -144,21 +169,6 @@ if ($method === 'POST' && isset($segments[1]) && $segments[1] === 'customer' && 
             sendError('Failed to create account', 500);
         }
     }
-    
-    $userId = $db->lastInsertId();
-    $token = generateToken($userId);
-    
-    // Get created user
-    $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
-    $stmt->execute([$userId]);
-    $user = $stmt->fetch();
-    unset($user['password_hash']);
-    
-    sendResponse([
-        'success' => true,
-        'token' => $token,
-        'user' => $user
-    ], 201);
 }
 
 // Manager Registration: POST /auth/manager/register
@@ -198,6 +208,31 @@ if ($method === 'POST' && isset($segments[1]) && $segments[1] === 'manager' && i
             VALUES (?, ?, ?, ?, 'manager')
         ");
         $stmt->execute([$email, $passwordHash, $name, $phone]);
+        
+        $userId = $db->lastInsertId();
+        
+        if (!$userId || $userId == 0) {
+            sendError('Failed to create user account. Please try again.', 500);
+        }
+        
+        $token = generateToken($userId);
+        
+        // Get created user
+        $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+        
+        if (!$user) {
+            sendError('Account created but could not retrieve user data', 500);
+        }
+        
+        unset($user['password_hash']);
+        
+        sendResponse([
+            'success' => true,
+            'token' => $token,
+            'user' => $user
+        ], 201);
     } catch (PDOException $e) {
         if (DEBUG_MODE) {
             sendError('Database error: ' . $e->getMessage(), 500);
@@ -205,21 +240,6 @@ if ($method === 'POST' && isset($segments[1]) && $segments[1] === 'manager' && i
             sendError('Failed to create account', 500);
         }
     }
-    
-    $userId = $db->lastInsertId();
-    $token = generateToken($userId);
-    
-    // Get created user
-    $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
-    $stmt->execute([$userId]);
-    $user = $stmt->fetch();
-    unset($user['password_hash']);
-    
-    sendResponse([
-        'success' => true,
-        'token' => $token,
-        'user' => $user
-    ], 201);
 }
 
 // Verify Token: GET /auth/verify
