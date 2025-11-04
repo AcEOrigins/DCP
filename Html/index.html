@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Declutter Pros - Professional Decluttering Services</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../Css/styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>Declutter Pros</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link active">Home</a></li>
+                <li><a href="#services" class="nav-link">Services</a></li>
+                <li><a href="#schedule" class="nav-link">Schedule Quote</a></li>
+                <li id="navAuthSection">
+                    <a href="#login" class="btn btn-primary nav-login-btn" id="navLoginBtn">Login</a>
+                    <div id="navUserSection" class="nav-user-section hidden">
+                        <img id="navUserPfp" src="" alt="Profile" class="nav-user-pfp" style="display: none;">
+                        <div class="nav-user-pfp-default" style="display: none;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <a href="portal.html" class="btn btn-primary nav-portal-btn">Go to Portal</a>
+                    </div>
+                </li>
+            </ul>
+            <button class="nav-toggle" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h2>Professional Decluttering Services</h2>
+                <p>Transform your spaces with expert decluttering solutions</p>
+                <a href="#schedule" class="btn btn-primary">Get Started</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services">
+        <div class="container">
+            <h2 class="section-title">Our Services</h2>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon">🏠</div>
+                    <h3>Residential Decluttering</h3>
+                    <p>Complete home organization and decluttering services</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🏢</div>
+                    <h3>Commercial Spaces</h3>
+                    <p>Office and commercial property organization</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🏗️</div>
+                    <h3>Property Development</h3>
+                    <p>Large-scale projects for property developers</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">📦</div>
+                    <h3>Estate Cleanouts</h3>
+                    <p>Comprehensive estate and property cleanouts</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login/Register Modal -->
+    <div id="loginModal" class="modal hidden">
+        <div class="modal-overlay" id="modalOverlay"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div class="login-card">
+                <div class="login-header">
+                    <h2 id="modalTitle">Welcome Back</h2>
+                    <p id="modalSubtitle">Sign in to access your account</p>
+                </div>
+                
+                <div class="portal-tabs">
+                    <button type="button" class="tab-btn active" data-tab="login">Login</button>
+                    <button type="button" class="tab-btn" data-tab="register">Register</button>
+                </div>
+                
+                <!-- Login Tab -->
+                <div id="loginTab" class="tab-content active">
+                    <form id="loginForm" class="auth-form">
+                        <div class="form-group">
+                            <label for="loginEmail">Email Address</label>
+                            <input type="email" id="loginEmail" name="loginEmail" placeholder="Enter your email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Password</label>
+                            <input type="password" id="loginPassword" name="loginPassword" placeholder="Enter your password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+                    </form>
+                </div>
+
+                <!-- Register Tab -->
+                <div id="registerTab" class="tab-content">
+                    <form id="registerForm" class="auth-form">
+                        <div class="form-group">
+                            <label for="regEmail">Email Address</label>
+                            <input type="email" id="regEmail" name="regEmail" placeholder="Enter your email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="regPassword">Password</label>
+                            <input type="password" id="regPassword" name="regPassword" placeholder="Create a password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="regPhone">Phone Number</label>
+                            <input type="tel" id="regPhone" name="regPhone" placeholder="Enter your phone number" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Quote Section -->
+    <section id="schedule" class="schedule-section">
+        <div class="container">
+            <h2 class="section-title">Schedule a Free Quote</h2>
+            <div id="quoteFormContainer" class="form-container">
+                <form id="quoteForm" class="quote-form">
+                    <div class="form-group">
+                        <label for="customerName">Full Name *</label>
+                        <input type="text" id="customerName" name="customerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerEmail">Email *</label>
+                        <input type="email" id="customerEmail" name="customerEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerPhone">Phone Number *</label>
+                        <input type="tel" id="customerPhone" name="customerPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="propertyAddress">Property Address *</label>
+                        <input type="text" id="propertyAddress" name="propertyAddress" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="propertyType">Property Type *</label>
+                        <select id="propertyType" name="propertyType" required>
+                            <option value="">Select Property Type</option>
+                            <option value="residential">Residential</option>
+                            <option value="commercial">Commercial</option>
+                            <option value="estate">Estate</option>
+                            <option value="development">Property Development</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="preferredDate">Preferred Date *</label>
+                        <input type="date" id="preferredDate" name="preferredDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="preferredTime">Preferred Time *</label>
+                        <select id="preferredTime" name="preferredTime" required>
+                            <option value="">Select Time</option>
+                            <option value="morning">Morning (8am-12pm)</option>
+                            <option value="afternoon">Afternoon (12pm-4pm)</option>
+                            <option value="evening">Evening (4pm-6pm)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="specialNotes">Special Notes or Requirements</label>
+                        <textarea id="specialNotes" name="specialNotes" rows="4"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Quote Request</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cookie Consent Banner -->
+    <div id="cookieConsent" class="cookie-consent hidden">
+        <div class="cookie-consent-content">
+            <div class="cookie-consent-text">
+                <h4>🍪 We use cookies</h4>
+                <p>We use cookies to improve your experience, analyze site usage, and assist in our marketing efforts. By clicking "Accept", you consent to our use of cookies and our privacy practices.</p>
+            </div>
+            <div class="cookie-consent-buttons">
+                <button id="acceptCookies" class="btn btn-primary">Accept</button>
+                <button id="declineCookies" class="btn btn-secondary">Decline</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Declutter Pros. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../Scripts/api.js"></script>
+    <script src="../Scripts/script.js"></script>
+    <script src="../Scripts/Watermark.js"></script>
+    <greyline-studio-watermark></greyline-studio-watermark>
+</body>
+</html>
+
